@@ -8,3 +8,4 @@ Enclave_t.h
 Enclave_t.c
 *.pyc
 web/venv
+db.sqlite3
