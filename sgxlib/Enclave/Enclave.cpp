@@ -44,19 +44,19 @@ using namespace std;
 set<string> db;
 
 
-void insert_record(const char *str)
+void ecall_insert_record(const char *str)
 {
   string rec(str);
   db.insert(rec);
 }
 
-void delete_record(const char *str)
+void ecall_delete_record(const char *str)
 {
   string rec(str);
   db.erase(rec);
 }
 
-int query_record(const char *str)
+int ecall_query_record(const char *str)
 {
   string rec(str);
   if (db.find(rec) == db.end())

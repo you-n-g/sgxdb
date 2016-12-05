@@ -101,7 +101,7 @@ endif
 
 Lib_Cpp_Objects := $(Lib_Cpp_Files:.cpp=.o)
 
-Lib_Name := app
+Lib_Name := sgxdb.so
 
 ######## Enclave Settings ########
 
@@ -185,7 +185,7 @@ Lib/%.o: Lib/%.cpp
 	@echo "CXX  <=  $<"
 
 $(Lib_Name): Lib/Enclave_u.o $(Lib_Cpp_Objects)
-	@$(CXX) $^ -o $@ $(Lib_Link_Flags)
+	@$(CXX) $^ -o $@ $(Lib_Link_Flags) -shared
 	@echo "LINK =>  $@"
 
 

@@ -31,9 +31,9 @@
 
 enclave {
     trusted {
-        public void insert_record([in, string]const char *str);
-        public void delete_record([in, string]const char *str);
-        public int query_record([in, string]const char *str);
+        public void ecall_insert_record([in, string]const char *str);
+        public void ecall_delete_record([in, string]const char *str);
+        public int ecall_query_record([in, string]const char *str);
     };
 
     untrusted {

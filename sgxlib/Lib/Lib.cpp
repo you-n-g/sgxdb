@@ -149,6 +149,10 @@ void print_error_message(sgx_status_t ret)
         printf("Error: Unexpected error occurred.\n");
 }
 
+
+
+extern "C"  {
+
 /* Initialize the enclave:
  *   Step 1: try to retrieve the launch token saved by last transaction
  *   Step 2: call sgx_create_enclave to initialize an enclave instance
@@ -219,6 +223,39 @@ int initialize_enclave(void)
 }
 
 
+int query_record(int* q_res, char *rec) {
+  sgx_status_t ret;
+  ret = ecall_query_record(global_eid, q_res, rec);
+  if (ret != SGX_SUCCESS)
+ 	  return 1;
+  return 0;
+}
+
+int insert_record(char *rec) {
+  sgx_status_t ret;
+  ret = ecall_insert_record(global_eid, rec);
+  if (ret != SGX_SUCCESS)
+ 	  return 1;
+  return 0;
+}
+
+int delete_record(char *rec) {
+  sgx_status_t ret;
+  ret = ecall_delete_record(global_eid, rec);
+  if (ret != SGX_SUCCESS)
+ 	  return 1;
+  return 0;
+}
+
+void destroy_enclave() {
+  sgx_destroy_enclave(global_eid);
+}
+
+
+} // end of extern 'C'
+
+
+
 /* OCall functions */
 void ocall_print_string(const char *str)
 {
@@ -249,44 +286,44 @@ int SGX_CDECL main(int argc, char *argv[])
   char rec2[] = "record2";
   int q_res;
 
-  ret = query_record(global_eid, &q_res, rec1);
+  ret = ecall_query_record(global_eid, &q_res, rec1);
   if (ret != SGX_SUCCESS)
  	  abort();
   printf("query of rec1 is %d.\n", q_res);
 
-  ret = query_record(global_eid, &q_res, rec2);
+  ret = ecall_query_record(global_eid, &q_res, rec2);
   if (ret != SGX_SUCCESS)
  	  abort();
   printf("query of rec2 is %d.\n", q_res);
 
 
   // insert
-  ret = insert_record(global_eid, rec1);
+  ret = ecall_insert_record(global_eid, rec1);
   if (ret != SGX_SUCCESS)
  	  abort();
 
-  ret = query_record(global_eid, &q_res, rec1);
+  ret = ecall_query_record(global_eid, &q_res, rec1);
   if (ret != SGX_SUCCESS)
  	  abort();
   printf("query of rec1 is %d.\n", q_res);
 
-  ret = query_record(global_eid, &q_res, rec2);
+  ret = ecall_query_record(global_eid, &q_res, rec2);
   if (ret != SGX_SUCCESS)
  	  abort();
   printf("query of rec2 is %d.\n", q_res);
  
 
   // insert
-  ret = insert_record(global_eid, rec2);
+  ret = ecall_insert_record(global_eid, rec2);
   if (ret != SGX_SUCCESS)
  	  abort();
 
-  ret = query_record(global_eid, &q_res, rec1);
+  ret = ecall_query_record(global_eid, &q_res, rec1);
   if (ret != SGX_SUCCESS)
  	  abort();
   printf("query of rec1 is %d.\n", q_res);
 
-  ret = query_record(global_eid, &q_res, rec2);
+  ret = ecall_query_record(global_eid, &q_res, rec2);
   if (ret != SGX_SUCCESS)
  	  abort();
   printf("query of rec2 is %d.\n", q_res);

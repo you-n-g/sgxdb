@@ -1,2 +1,8 @@
 *.swp
 .ycm_extra_conf.py
+*.o
+*.so
+Enclave_u.h
+Enclave_u.c
+Enclave_t.h
+Enclave_t.c

@@ -59,6 +59,10 @@ extern "C" {
 #endif
 
 int initialize_enclave(void);
+int query_record(int *q_res, char *rec);
+int insert_record(char *rec);
+int delete_record(char *rec);
+void destroy_enclave();
 
 #if defined(__cplusplus)
 }
