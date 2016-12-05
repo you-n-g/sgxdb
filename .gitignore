@@ -6,3 +6,5 @@ Enclave_u.h
 Enclave_u.c
 Enclave_t.h
 Enclave_t.c
+*.pyc
+web/venv
