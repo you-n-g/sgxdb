@@ -247,6 +247,30 @@ int delete_record(char *rec) {
   return 0;
 }
 
+int get_export_size(int *retval) {
+  sgx_status_t ret;
+  ret = ecall_get_export_size(global_eid, retval);
+  if (ret != SGX_SUCCESS)
+ 	  return 1;
+  return 0;
+}
+
+int export_sealed_data(int *retval, char *data, int len) {
+  sgx_status_t ret;
+  ret = ecall_export_sealed_data(global_eid, retval, data, len);
+  if (ret != SGX_SUCCESS)
+ 	  return 1;
+  return 0;
+}
+
+int import_sealed_data(int *retval, char *data, int len) {
+  sgx_status_t ret;
+  ret = ecall_import_sealed_data(global_eid, retval, data, len);
+  if (ret != SGX_SUCCESS)
+ 	  return 1;
+  return 0;
+}
+
 void destroy_enclave() {
   sgx_destroy_enclave(global_eid);
 }

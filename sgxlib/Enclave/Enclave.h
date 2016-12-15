@@ -36,6 +36,8 @@
 #include <stdlib.h>
 #include <assert.h>
 
+#define SPLIT "#.#"
+
 #if defined(__cplusplus)
 extern "C" {
 #endif

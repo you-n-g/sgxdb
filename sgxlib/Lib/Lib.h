@@ -62,6 +62,11 @@ int initialize_enclave(void);
 int query_record(int *q_res, char *rec);
 int insert_record(char *rec);
 int delete_record(char *rec);
+
+int get_export_size(int *retval);
+int export_sealed_data(int *retval, char* data, int len);
+int import_sealed_data(int *retval, char* data, int len);
+
 void destroy_enclave();
 
 #if defined(__cplusplus)

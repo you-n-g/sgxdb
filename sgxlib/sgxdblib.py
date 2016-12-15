@@ -27,30 +27,84 @@ class SGXDB(object):
     @classmethod
     def insert(cls, data): 
         if cls.get_lib().insert_record(ctypes.c_char_p(data)) != 0:
-            raise RuntimeError(u"Fail to insert data!")
+            raise RuntimeError(u"SGX: Fail to insert data!")
 
     @classmethod
     def delete(cls, data):
         if cls.get_lib().delete_record(ctypes.c_char_p(data)) != 0:
-            raise RuntimeError(u"Fail to delete data")
+            raise RuntimeError(u"SGX: Fail to delete data")
 
     @classmethod
     def query(cls, data):
         retval = ctypes.c_int()
         if cls.get_lib().query_record(ctypes.byref(retval), ctypes.c_char_p(data)) != 0:
-            raise RuntimeError(u"Fail to execute the query")
+            raise RuntimeError(u"SGX: Fail to execute the query")
         return retval.value == 1
 
+    @classmethod
+    def get_export_size(cls):
+        retval = ctypes.c_int()
+        if cls.get_lib().get_export_size(ctypes.byref(retval)) != 0:
+            raise RuntimeError(u"SGX: Fail to get the export size")
+        return retval.value
+
+    @classmethod
+    def export_sealed_data(cls):
+        retval = ctypes.c_int()
+        size = cls.get_export_size()
+        data = (ctypes.c_char * size)()
+        if cls.get_lib().export_sealed_data(ctypes.byref(retval), data, size) != 0:
+            raise RuntimeError(u"SGX: Fail to export sealed data")
+        if retval.value != 0:
+            raise RuntimeError(u"Error occurs when getting the export sealed data")
+        return data.raw
+
+    @classmethod
+    def import_sealed_data(cls, data):
+        retval = ctypes.c_int()
+        if cls.get_lib().import_sealed_data(ctypes.byref(retval), ctypes.c_char_p(data), len(data)) != 0:
+            raise RuntimeError(u"SGX: Fail to import sealed data")
+        if retval.value != 0:
+            raise RuntimeError(u"Error occurs when getting the import sealed data")
+
+
 def test_api():
+    print 'SGXDB.insert("bad")'
     SGXDB.insert("bad")
-    print repr(SGXDB.query("good"))
+
+    print 'repr(SGXDB.query("good"))', repr(SGXDB.query("good"))
+
+    print 'SGXDB.insert("good")'
     SGXDB.insert("good")
 
-    print repr(SGXDB.query("good"))
+    print 'repr(SGXDB.query("good"))', repr(SGXDB.query("good"))
+
+    print 'SGXDB.delete("good")'
     SGXDB.delete("good")
 
-    print repr(SGXDB.query("good"))
+    print 'repr(SGXDB.query("good"))', repr(SGXDB.query("good"))
+
+    print "SGXDB.get_export_size():",  repr(SGXDB.get_export_size())
+
+    sealed_data = SGXDB.export_sealed_data()
+    print "SGXDB.export_sealed_data():", repr(sealed_data)
+
+    print 'SGXDB.delete("good")'
+    SGXDB.delete("good")
+    print 'SGXDB.delete("bad")'
+    SGXDB.delete("bad")
+
+    print 'repr(SGXDB.query("bad"))', repr(SGXDB.query("bad"))
+    print 'repr(SGXDB.query("good"))', repr(SGXDB.query("good"))
+
+    print "Importing the sealed data"
+    SGXDB.import_sealed_data(sealed_data)
+
+    print 'repr(SGXDB.query("bad"))', repr(SGXDB.query("bad"))
+    print 'repr(SGXDB.query("good"))', repr(SGXDB.query("good"))
+
     SGXDB.destroy()
+
 
 if __name__ == '__main__':
     test_api()

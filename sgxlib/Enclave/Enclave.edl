@@ -34,10 +34,16 @@ enclave {
         public void ecall_insert_record([in, string]const char *str);
         public void ecall_delete_record([in, string]const char *str);
         public int ecall_query_record([in, string]const char *str);
+
+        public int ecall_get_export_size();
+        public int ecall_export_sealed_data([in, out, size=len] char *str, int len);
+
+        public int ecall_import_sealed_data([in, size=len]const char *str, int len);
     };
 
     untrusted {
         void ocall_print_string([in, string] const char *str);
+        /* void *ocall_malloc(int size); */
     };
 
 };

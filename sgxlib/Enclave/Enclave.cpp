@@ -35,6 +35,8 @@
 
 #include "Enclave.h"
 #include "Enclave_t.h"  /* print_string */
+#include <sgx_trts.h>
+#include "sgx_tseal.h"
 
 #include <set>
 #include <string>
@@ -42,6 +44,31 @@ using namespace std;
 
 
 set<string> db;
+
+
+/*
+ * printf:
+ *   Invokes OCALL to display the enclave buffer to the terminal.
+ */
+void printf(const char *fmt, ...)
+{
+    char buf[BUFSIZ] = {'\0'};
+    va_list ap;
+    va_start(ap, fmt);
+    vsnprintf(buf, BUFSIZ, fmt, ap);
+    va_end(ap);
+    ocall_print_string(buf);
+}
+
+
+static inline void free_allocated_memory(void *pointer)
+{
+    if(pointer != NULL)
+    {
+        free(pointer);
+        pointer = NULL;
+    }
+}
 
 
 void ecall_insert_record(const char *str)
@@ -64,17 +91,81 @@ int ecall_query_record(const char *str)
   return 1;
 }
 
+int ecall_get_export_size() {
+  int size = 0;
+  for (set<string>::iterator it = db.begin(); it != db.end(); ++it)
+    size += it->size() + 3;
+  return size + sizeof(sgx_sealed_data_t);
+}
 
-/*
- * printf:
- *   Invokes OCALL to display the enclave buffer to the terminal.
- */
-void printf(const char *fmt, ...)
+int ecall_export_sealed_data(char* data, int size)
 {
-    char buf[BUFSIZ] = {'\0'};
-    va_list ap;
-    va_start(ap, fmt);
-    vsnprintf(buf, BUFSIZ, fmt, ap);
-    va_end(ap);
-    ocall_print_string(buf);
+  if (data == NULL) {
+    printf("Incorrect input parameter(s).\n");
+    return -1;
+  }
+  string sdata;
+  for (set<string>::iterator it = db.begin(); it != db.end(); ++it) {
+    sdata.append(*it);
+    sdata.append(SPLIT);
+  }
+
+  uint32_t sealed_len = size;
+  uint8_t *plain_text = NULL;
+  uint32_t plain_text_length = 0;
+  uint8_t *temp_sealed_buf = (uint8_t *)malloc(sealed_len);
+
+
+  sgx_status_t ret = sgx_seal_data(plain_text_length, plain_text, sdata.size(), (uint8_t *)&sdata[0], sealed_len, (sgx_sealed_data_t *)temp_sealed_buf);
+  if(ret != SGX_SUCCESS)
+  {
+      printf("Failed to seal data\n");
+      free_allocated_memory(temp_sealed_buf);
+      return -1;
+  }
+  // Backup the sealed data to outside buffer
+  memcpy(data, temp_sealed_buf, sealed_len);
+  return 0;
+}
+
+
+/**
+ * size: the size of the data
+ */
+int ecall_import_sealed_data(const char *data, int size) {
+
+  // Retrieve the secret from current backup sealed data
+  uint32_t unsealed_data_length = size - sizeof(sgx_sealed_data_t);
+  char unsealed_data[unsealed_data_length];
+  uint8_t *plain_text = NULL;
+  uint32_t plain_text_length = 0;
+  uint8_t *temp_sealed_buf = (uint8_t *)malloc(size);
+  if(temp_sealed_buf == NULL)
+  {
+      printf("Out of memory.\n");
+      return -1;
+  }
+
+  memcpy(temp_sealed_buf, data, size);
+
+  // Unseal current sealed buf
+  sgx_status_t ret = sgx_unseal_data((sgx_sealed_data_t *)temp_sealed_buf, plain_text, &plain_text_length, (uint8_t *)&unsealed_data, &unsealed_data_length);
+  free_allocated_memory(temp_sealed_buf);
+  if(ret != SGX_SUCCESS) {
+      printf("Failed to unseal the data.\n");
+      return -1;
+  }
+
+  db.clear();
+  int begin = 0, end = 0;
+  while (begin != unsealed_data_length) {
+      if (unsealed_data[end] == '#' && unsealed_data[end + 1] == '.' && unsealed_data[end + 2] == '#') {
+        db.insert(string(unsealed_data + begin, unsealed_data + end));
+        begin = end = end + 3;
+      }
+      else
+        end++;
+  }
+
+  return 0;
 }
