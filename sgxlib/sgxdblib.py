@@ -109,6 +109,15 @@ def test_api():
 
     SGXDB.destroy()
 
+def debug():
+    key = 'localhost'
+    data='{"ansible_ssh_host":"127.0.0.1","ansible_ssh_user":"root","ansible_ssh_pass":"yangxiao"}'
+    SGXDB.insert(key, data)
+    res = SGXDB.query(key)
+    print repr(res)
+    assert(res == data)
+
 
 if __name__ == '__main__':
     test_api()
+    # debug()

@@ -93,7 +93,7 @@ void ecall_query_record(const char *str, void* ptr)
   char* value;
   sgx_status_t ret;
   ret = ocall_malloc((void**)&value, db[rec].size() + 1);
-  memcpy(value, &db[rec], db[rec].size() + 1);
+  memcpy(value, db[rec].c_str(), db[rec].size() + 1);
 
   *(char**)ptr = value;
 }
