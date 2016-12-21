@@ -38,12 +38,12 @@
 #include <sgx_trts.h>
 #include "sgx_tseal.h"
 
-#include <set>
+#include <map>
 #include <string>
 using namespace std;
 
 
-set<string> db;
+map<string,string> db;
 
 
 /*
@@ -71,10 +71,10 @@ static inline void free_allocated_memory(void *pointer)
 }
 
 
-void ecall_insert_record(const char *str)
+void ecall_insert_record(const char *key, const char *data)
 {
-  string rec(str);
-  db.insert(rec);
+  string k(key), d(data);
+  db[k] = d;
 }
 
 void ecall_delete_record(const char *str)
@@ -83,18 +83,25 @@ void ecall_delete_record(const char *str)
   db.erase(rec);
 }
 
-int ecall_query_record(const char *str)
+void ecall_query_record(const char *str, void* ptr)
 {
   string rec(str);
-  if (db.find(rec) == db.end())
-    return 0;
-  return 1;
+  if (db.find(rec) == db.end()) {
+    return;
+  }
+
+  char* value;
+  sgx_status_t ret;
+  ret = ocall_malloc((void**)&value, db[rec].size() + 1);
+  memcpy(value, &db[rec], db[rec].size() + 1);
+
+  *(char**)ptr = value;
 }
 
 int ecall_get_export_size() {
   int size = 0;
-  for (set<string>::iterator it = db.begin(); it != db.end(); ++it)
-    size += it->size() + 3;
+  for (map<string, string>::iterator it = db.begin(); it != db.end(); ++it)
+    size += it->first.size() + it->second.size() + 6;
   return size + sizeof(sgx_sealed_data_t);
 }
 
@@ -105,8 +112,10 @@ int ecall_export_sealed_data(char* data, int size)
     return -1;
   }
   string sdata;
-  for (set<string>::iterator it = db.begin(); it != db.end(); ++it) {
-    sdata.append(*it);
+  for (map<string,string>::iterator it = db.begin(); it != db.end(); ++it) {
+    sdata.append(it->first);
+    sdata.append(SPLIT);
+    sdata.append(it->second);
     sdata.append(SPLIT);
   }
 
@@ -116,7 +125,7 @@ int ecall_export_sealed_data(char* data, int size)
   uint8_t *temp_sealed_buf = (uint8_t *)malloc(sealed_len);
 
 
-  sgx_status_t ret = sgx_seal_data(plain_text_length, plain_text, sdata.size(), (uint8_t *)&sdata[0], sealed_len, (sgx_sealed_data_t *)temp_sealed_buf);
+  sgx_status_t ret = sgx_seal_data(plain_text_length, plain_text, sdata.size(), (uint8_t *)&sdata, sealed_len, (sgx_sealed_data_t *)temp_sealed_buf);
   if(ret != SGX_SUCCESS)
   {
       printf("Failed to seal data\n");
@@ -158,9 +167,16 @@ int ecall_import_sealed_data(const char *data, int size) {
 
   db.clear();
   int begin = 0, end = 0;
+  bool key=true;
+  string last_key;
   while (begin != unsealed_data_length) {
       if (unsealed_data[end] == '#' && unsealed_data[end + 1] == '.' && unsealed_data[end + 2] == '#') {
-        db.insert(string(unsealed_data + begin, unsealed_data + end));
+        string value = string(unsealed_data + begin, unsealed_data + end);
+        if (key)
+          last_key = value;
+        else
+          db[last_key] = value;
+        key = !key;
         begin = end = end + 3;
       }
       else

@@ -9,3 +9,4 @@ Enclave_t.c
 *.pyc
 web/venv
 db.sqlite3
+conf.sealed

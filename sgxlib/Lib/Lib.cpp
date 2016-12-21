@@ -31,6 +31,7 @@
 
 
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 #include <assert.h>
 
@@ -223,25 +224,25 @@ int initialize_enclave(void)
 }
 
 
-int query_record(int* q_res, char *rec) {
+int query_record(char** q_res, char *key) {
   sgx_status_t ret;
-  ret = ecall_query_record(global_eid, q_res, rec);
+  ret = ecall_query_record(global_eid, key, q_res);
   if (ret != SGX_SUCCESS)
  	  return 1;
   return 0;
 }
 
-int insert_record(char *rec) {
+int insert_record(char *key, char *data) {
   sgx_status_t ret;
-  ret = ecall_insert_record(global_eid, rec);
+  ret = ecall_insert_record(global_eid, key, data);
   if (ret != SGX_SUCCESS)
  	  return 1;
   return 0;
 }
 
-int delete_record(char *rec) {
+int delete_record(char *key) {
   sgx_status_t ret;
-  ret = ecall_delete_record(global_eid, rec);
+  ret = ecall_delete_record(global_eid, key);
   if (ret != SGX_SUCCESS)
  	  return 1;
   return 0;
@@ -275,6 +276,13 @@ void destroy_enclave() {
   sgx_destroy_enclave(global_eid);
 }
 
+/**
+ * This function is used to free the pointer
+ */
+void freeptr(void* ptr) {
+  free(ptr);
+}
+
 
 } // end of extern 'C'
 
@@ -287,6 +295,15 @@ void ocall_print_string(const char *str)
      * the input string to prevent buffer overflow. 
      */
     printf("%s", str);
+}
+
+
+void* ocall_malloc(int size) {
+  return malloc(size);
+}
+
+void  ocall_free(void *ptr) {
+  free(ptr);
 }
 
 
@@ -310,6 +327,7 @@ int SGX_CDECL main(int argc, char *argv[])
   char rec2[] = "record2";
   int q_res;
 
+  /*
   ret = ecall_query_record(global_eid, &q_res, rec1);
   if (ret != SGX_SUCCESS)
  	  abort();
@@ -351,6 +369,7 @@ int SGX_CDECL main(int argc, char *argv[])
   if (ret != SGX_SUCCESS)
  	  abort();
   printf("query of rec2 is %d.\n", q_res);
+  */
 
 
   /* Destroy the enclave */

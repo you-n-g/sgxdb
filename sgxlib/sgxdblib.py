@@ -3,6 +3,7 @@
 
 import ctypes
 import os
+import copy
 
 PACKAGE_PATH = os.path.abspath(os.path.dirname(__file__))
 
@@ -25,21 +26,24 @@ class SGXDB(object):
             raise RuntimeError(u"Fail to destroy enclave!")
 
     @classmethod
-    def insert(cls, data): 
-        if cls.get_lib().insert_record(ctypes.c_char_p(data)) != 0:
+    def insert(cls, key, data): 
+        if cls.get_lib().insert_record(ctypes.c_char_p(key), ctypes.c_char_p(data)) != 0:
             raise RuntimeError(u"SGX: Fail to insert data!")
 
     @classmethod
-    def delete(cls, data):
-        if cls.get_lib().delete_record(ctypes.c_char_p(data)) != 0:
+    def delete(cls, key):
+        if cls.get_lib().delete_record(ctypes.c_char_p(key)) != 0:
             raise RuntimeError(u"SGX: Fail to delete data")
 
     @classmethod
-    def query(cls, data):
-        retval = ctypes.c_int()
-        if cls.get_lib().query_record(ctypes.byref(retval), ctypes.c_char_p(data)) != 0:
+    def query(cls, key):
+        retval = ctypes.c_char_p()
+        if cls.get_lib().query_record(ctypes.byref(retval), ctypes.c_char_p(key)) != 0:
             raise RuntimeError(u"SGX: Fail to execute the query")
-        return retval.value == 1
+        res = copy.copy(retval.value)
+        if res is not None:
+            cls.get_lib().freeptr(retval);
+        return res
 
     @classmethod
     def get_export_size(cls):
@@ -70,12 +74,12 @@ class SGXDB(object):
 
 def test_api():
     print 'SGXDB.insert("bad")'
-    SGXDB.insert("bad")
+    SGXDB.insert("bad", "bad_value")
 
     print 'repr(SGXDB.query("good"))', repr(SGXDB.query("good"))
 
     print 'SGXDB.insert("good")'
-    SGXDB.insert("good")
+    SGXDB.insert("good", "good_value")
 
     print 'repr(SGXDB.query("good"))', repr(SGXDB.query("good"))
 

@@ -22,4 +22,6 @@ urlpatterns = [
     url(r'^insert/', sgxdb.views.insert),
     url(r'^delete/', sgxdb.views.delete),
     url(r'^query/', sgxdb.views.query),
+    url(r'^save/', sgxdb.views.save),
+    url(r'^load/', sgxdb.views.load),
 ]

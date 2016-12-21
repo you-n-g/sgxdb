@@ -59,9 +59,9 @@ extern "C" {
 #endif
 
 int initialize_enclave(void);
-int query_record(int *q_res, char *rec);
-int insert_record(char *rec);
-int delete_record(char *rec);
+int query_record(char **q_res, char *key);
+int insert_record(char *key, char *data);
+int delete_record(char *key);
 
 int get_export_size(int *retval);
 int export_sealed_data(int *retval, char* data, int len);
