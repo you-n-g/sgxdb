@@ -50,6 +50,8 @@ def query(request):
             ret = SGXDB.query(key)
         except RuntimeError:
             code = 1
+    print 'key', key
+    print 'ret', ret
     return JsonResponse({"code": code, "ret": ret})
 
 SEALED_DATA_NAME = "conf.sealed"
