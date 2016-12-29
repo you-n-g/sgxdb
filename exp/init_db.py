@@ -8,7 +8,7 @@ S = requests.Session()
 
 list_data = {
     'all': {
-        'hosts': ['localhost'],
+        'hosts': ['localhost', "192.168.150.103"],
         'vars': {
             'ansible_ssh_user': 'root',
             'ansible_ssh_pass': 'yangxiao'
@@ -22,19 +22,20 @@ host_data = {
 }
 
 r = S.post("http://127.0.0.1:8000/insert/", {'key': "hosts", 'value': "localhost"}, timeout=20)
-
 print r.content
 
 
 r = S.post("http://127.0.0.1:8000/insert/",
-        # {'key': "localhost", 'value': "good{}{}{}{}}{}"}, timeout=20)
         {'key': "hosts", 'value': json.dumps(list_data)}, timeout=20)
 print r.content
 
 
 r = S.post("http://127.0.0.1:8000/insert/",
-        # {'key': "localhost", 'value': "good{}{}{}{}}{}"}, timeout=20)
         {'key': "localhost", 'value': json.dumps(host_data)}, timeout=20)
+print r.content
+
+r = S.post("http://127.0.0.1:8000/insert/",
+        {'key': "192.168.150.103", 'value': json.dumps(host_data)}, timeout=20)
 print r.content
 
 

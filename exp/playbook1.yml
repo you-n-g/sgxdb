@@ -1,5 +1,6 @@
 ---
-- hosts: localhost
+# - hosts: localhost
+- hosts: 192.168.150.103
   tasks:
   - name: ls dir
     command: ls /
